@@ -7,11 +7,11 @@ const collectionsRoutes = Router()
 const collectionsController = new CollectionsController()
 
 
-collectionsRoutes.get("/", collectionsController.index);
-collectionsRoutes.post("/", () => {});
-collectionsRoutes.get("/:id", () => {});
-collectionsRoutes.put("/:id", () => {});
-collectionsRoutes.delete("/:id", () => {});
+collectionsRoutes.get("/",collectionsController.index);
+collectionsRoutes.post("/", collectionsController.create);
+collectionsRoutes.get("/:id", collectionsController.show);
+collectionsRoutes.put("/:id", collectionsController.update);
+collectionsRoutes.delete("/:id", collectionsController.delete);
 
 export { collectionsRoutes}
 
