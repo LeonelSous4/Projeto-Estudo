@@ -1,10 +1,10 @@
 
 import { Router } from "express";
 
-import { colectionsController } from "@/controllers/collections.controllers";
+import { CollectionsController } from "@/controllers/collections.controllers";
 
 const collectionsRoutes = Router()
-const collectionsController = new colectionsController()
+const collectionsController = new CollectionsController()
 
 
 collectionsRoutes.get("/", collectionsController.index);
