@@ -65,33 +65,72 @@ class CollectionsController {
     async update(request: Request, response: Response, next: NextFunction){
 
         try {
-
-            const {id} = request.params
-            const {name} = request.body
-
-            const collection = await db('collections')
-            .where('id', id)
-            .update({ name, updated_at: db.fn.now() })
-
-            return response.status(201).json({message: "Coleção atualizada com sucesso!"})
+            const { id } = request.params;
+            const { name, description } = request.body;
 
             if (!name) {
-                throw new AppError("nome nao enviado", 400)
+                throw new AppError("O nome da coleção é obrigatório!", 400);
             }
+
+            // 1. Primeiro verifica se a coleção existe
+            const collection = await db('collections').where({ id }).first();
 
             if (!collection) {
-                throw new AppError("coleção nao encontrada", 400)
+                throw new AppError("Coleção não encontrada.", 404);
             }
-           
-            
-            return response.status(201).json({collection})
+
+            // 2. Faz a atualização
+            await db('collections')
+                .where({ id })
+                .update({ 
+                    name, 
+                    updated_at: db.fn.now() 
+                });
+
+            return response.status(200).json({ message: "Coleção atualizada com sucesso!", collection });
+
+      
+    
         
+        } catch (error) {
+            next(error);        
+}
+    
+}
+    
+
+
+
+
+
+
+async delete(request: Request, response: Response, next: NextFunction) {
+        try {
+            const { id } = request.params;
+
+            // 1. Busca a coleção na tabela correta ("collections")
+            const collection = await db("collections")
+                .where({ id })
+                .first();
+
+            // 2. Valida se ela existe
+            if (!collection) {
+                throw new AppError("Coleção não encontrada.", 404);
+            }
+
+            // 3. Executa a exclusão corretamente usando o Knex com await
+            await db("collections")
+                .where({ id })
+                .delete();
+
+            // 4. Retorna a resposta com status 200 (OK)
+            return response.status(200).json({ message: "Coleção deletada com sucesso!" });
             
         } catch (error) {
-            next(error);        }
-
+            next(error);
+        }
     }
-
+    
 
 
 
