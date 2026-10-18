@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Esta documentação foi elaborada para ser o seu **guia de estudo definitivo**, explicando tanto a **regra de negócio da vida real** quanto a **arquitetura técnica de código**, arquivo por arquivo, com diagramas visuais e exemplos dissecados.",
   "main": "index.js",
-    "scripts": {
+  "scripts": {
     "dev": "tsx watch src/server.ts",
     "knex": "tsx ./node_modules/knex/bin/cli.js"
   },
@@ -13,7 +13,8 @@
   "dependencies": {
     "express": "^5.2.1",
     "knex": "^3.3.0",
-    "mysql2": "^3.24.4"
+    "mysql2": "^3.24.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express"
 import { db } from "@/database/knex";
 import { AppError } from "@/utils/AppError";
-import { Knex } from "knex";
+import { z } from "zod";
+
 
 class CollectionsController {
 
@@ -9,11 +10,12 @@ class CollectionsController {
 
         try {
 
-            const {name, description} = request.body
+         const bodySchema = z.object({
+                name: z.string().trim().min(1, "O nome da coleção é obrigatório!"),
+            });
+            // 2. O .parse valida tudo sozinho. Se der erro, ele joga o ZodError pro catch!
+            const { name } = bodySchema.parse(request.body);
 
-        if (!name) {
-                throw new AppError("O nome da coleção é obrigatório!", 400);
-            }
 
             await db("collections").insert({ name });
        
