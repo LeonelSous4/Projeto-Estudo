@@ -2,33 +2,33 @@ import "knex/types/tables";
 
 declare module "knex/types/tables" {
     export interface Collection {
-        id: number;
+        id: number | string;
         name: string;
         created_at: string;
         updated_at: string;
     }
 
     export interface Notebook {
-        id: number;
+        id: number | string;
         name: string;
-        collection_id: number;
+        collection_id: number | string;
         created_at: string;
         updated_at: string;
     }
 
     export interface Topic {
-        id: number;
+        id: number | string;
         name: string;
         content: string | null;
         is_completed: boolean;
-        notebook_id: number;
+        notebook_id: number | string;
         created_at: string;
         updated_at: string;
     }
 
     export interface StudySession {
-        id: number;
-        notebook_id: number;
+        id: number | string;
+        notebook_id: number | string;
         type: "teoria" | "questoes" | "revisao";
         status: "active" | "paused" | "finished";
         duration_seconds: number;
@@ -45,4 +45,3 @@ declare module "knex/types/tables" {
         study_sessions: StudySession;
     }
 }
-
