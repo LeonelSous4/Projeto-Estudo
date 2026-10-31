@@ -36,10 +36,23 @@ export class StudySessionController {
         }
     }
 
+
+
     // 2. LISTAR SESSÕES / HISTÓRICO
     async index(request: Request, response: Response, next: NextFunction) {
         try {
-            // Vamos fazer juntos aqui
+
+            const { sessions_id } = request.query;
+
+            const query = db("study_sessions");
+
+            if (sessions_id) {
+                query.where({ id: Number(sessions_id) });
+            }
+
+            const sessions = await query;
+
+            return response.json(sessions);
         } catch (error) {
             next(error);
         }
@@ -48,6 +61,26 @@ export class StudySessionController {
     // 3. MOSTRAR UMA SESSÃO
     async show(request: Request, response: Response, next: NextFunction) {
         try {
+            
+
+            const id = Number(request.params.id);
+             const session = await db("study_sessions").where({ id }).first();
+
+            if (!session) {
+                throw new AppError("Sessão não encontrada.", 404);
+            }
+
+
+            return response.json(session);
+
+
+
+
+
+
+
+
+
             // Vamos fazer juntos aqui
         } catch (error) {
             next(error);
@@ -58,7 +91,8 @@ export class StudySessionController {
     async pause(request: Request, response: Response, next: NextFunction) {
         try {
             // Vamos fazer juntos aqui
-            const {id} = request.params;
+            const id = Number(request.params.id);
+
             
             const session = await db("study_sessions").where({id}).first();
 
@@ -71,7 +105,7 @@ export class StudySessionController {
             }
 
             const elapsedSeconds = Math.floor(
-            (Date.now() - new Date(session.active_since).getTime()) / 1000
+            (Date.now() - new Date(session.active_since!).getTime()) / 1000
             );
 
             await db("study_sessions").where({id}).update({
@@ -100,6 +134,28 @@ export class StudySessionController {
             
             const session = await db("study_sessions").where({id}).first();
 
+            if(!session){
+                throw new AppError("sessão nao existe!", 404)
+            }
+
+            if(session.status !== "paused"){
+                throw new AppError("sessão nao esta pausada para ser retomada!", 400)
+            }
+
+               await db("study_sessions").where({id}).update({
+               status: "active",
+               updated_at: db.fn.now(),
+                active_since: db.fn.now(),
+
+
+
+            })
+
+
+            return response.json({ message: "Cronômetro retomado!" });
+
+
+
          
             // Vamos fazer juntos aqui
         }catch (error) {
@@ -111,16 +167,77 @@ export class StudySessionController {
 
     // 6. FINALIZAR CRONÔMETRO
     async finish(request: Request, response: Response, next: NextFunction) {
-        try {
+
+      try {
+
+            const id = Number(request.params.id);
+            
+            const session = await db("study_sessions").where({id}).first();
+
+            if(!session){
+                throw new AppError("sessão nao existe!", 404)
+            }
+
+            if(session.status !== "active" && session.status !== "paused"){
+                throw new AppError("sessão nao esta ativa ou pausada para ser finalizada!", 400)
+            }
+
+              const elapsedSeconds = Math.floor(
+            (Date.now() - new Date(session.active_since!).getTime()) / 1000
+            );
+
+               await db("study_sessions").where({id}).update({
+                duration_seconds: session.duration_seconds + elapsedSeconds,
+               status: "finished",
+               updated_at: db.fn.now(),
+                active_since: db.fn.now(),
+            })
+
+
+            return response.json({ message: "Cronômetro finalizado!", duration_seconds: session.duration_seconds + elapsedSeconds });
+
+
+
+         
             // Vamos fazer juntos aqui
-        } catch (error) {
+        }catch (error) {
             next(error);
         }
+    
+
+
     }
 
     // 7. EXCLUIR UMA SESSÃO
     async delete(request: Request, response: Response, next: NextFunction) {
         try {
+
+            const id = Number(request.params.id);
+
+            const session = await db("study_sessions")
+            .where({ id })
+            .first();
+
+            if (!session) {
+            throw new AppError("Sessão não encontrada!", 404);
+            }
+
+            await db("study_sessions").where({ id }).del();
+
+
+
+
+            return response.status(200).json({ message: "sessão deletada com sucesso" });
+
+
+
+
+
+
+
+
+
+
             // Vamos fazer juntos aqui
         } catch (error) {
             next(error);
