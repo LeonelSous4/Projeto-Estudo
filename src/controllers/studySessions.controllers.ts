@@ -7,7 +7,6 @@ export class StudySessionController {
     // 1. INICIAR CRONÔMETRO
     async create(request: Request, response: Response, next: NextFunction) {
         try {
-            // Vamos fazer juntos aqui
             const bodySchema = z.object({
                 notebook_id: z.number().int().positive(),
                 type: z.enum(["teoria", "questoes", "revisao"])
@@ -42,12 +41,12 @@ export class StudySessionController {
     async index(request: Request, response: Response, next: NextFunction) {
         try {
 
-            const { sessions_id } = request.query;
+            const { notebook_id } = request.query;
 
             const query = db("study_sessions");
 
-            if (sessions_id) {
-                query.where({ id: Number(sessions_id) });
+            if (notebook_id) {
+                query.where({ notebook_id: Number(notebook_id) }).orderBy("created_at", "desc");
             }
 
             const sessions = await query;
@@ -75,13 +74,6 @@ export class StudySessionController {
 
 
 
-
-
-
-
-
-
-            // Vamos fazer juntos aqui
         } catch (error) {
             next(error);
         }
@@ -104,6 +96,10 @@ export class StudySessionController {
                 throw new AppError("sessão nao esta ativa para ser pausada!", 400)
             }
 
+            if(!session.active_since){
+                throw new AppError("sessão nao tem tempo de inicio!", 400)
+            }
+
             const elapsedSeconds = Math.floor(
             (Date.now() - new Date(session.active_since!).getTime()) / 1000
             );
@@ -116,7 +112,7 @@ export class StudySessionController {
 
             })
 
-            return response.json({ message: "Cronômetro pausado!" })
+            return response.json({ message: "Cronômetro pausado!", time: session.duration_seconds + elapsedSeconds });
 
 
         } catch (error) {
@@ -140,6 +136,10 @@ export class StudySessionController {
 
             if(session.status !== "paused"){
                 throw new AppError("sessão nao esta pausada para ser retomada!", 400)
+            }
+
+            if(!session.active_since){
+                throw new AppError("sessão nao tem tempo de inicio!", 400)
             }
 
                await db("study_sessions").where({id}).update({
@@ -230,17 +230,42 @@ export class StudySessionController {
             return response.status(200).json({ message: "sessão deletada com sucesso" });
 
 
-
-
-
-
-
-
-
-
-            // Vamos fazer juntos aqui
         } catch (error) {
             next(error);
         }
     }
+
+
+
+    async today(request: Request, response: Response, next: NextFunction) {
+        try {
+
+            const id = Number(request.params.id);
+
+            const session = await db("study_sessions")
+            .where({ id })
+            .first();
+
+            if (!session) {
+            throw new AppError("Sessão não encontrada!", 404);
+            }
+
+            await db("study_sessions").where({ id }).del();
+
+
+
+
+            return response.status(200).json({ message: "sessão deletada com sucesso" });
+
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+
+
+
+
+
 }
