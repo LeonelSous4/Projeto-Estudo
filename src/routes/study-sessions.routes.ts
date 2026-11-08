@@ -9,8 +9,9 @@ const studySessionController = new StudySessionController()
 
 studySessionsRoutes.post("/", studySessionController.create);
 studySessionsRoutes.get("/",studySessionController.index);
-studySessionsRoutes.get("/:id", studySessionController.show);
+studySessionsRoutes.get("/today", studySessionController.today);
 
+studySessionsRoutes.get("/:id", studySessionController.show);
 studySessionsRoutes.patch("/:id/pause", studySessionController.pause);
 studySessionsRoutes.patch("/:id/resume", studySessionController.resume);
 studySessionsRoutes.patch("/:id/finish", studySessionController.finish);
