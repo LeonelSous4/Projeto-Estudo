@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { db } from "@/database/knex";
 import { AppError } from "@/utils/AppError";
+import { date } from "zod/mini";
 
 export class StudySessionController {
     // 1. INICIAR CRONÔMETRO
@@ -166,46 +167,47 @@ export class StudySessionController {
     }
 
     // 6. FINALIZAR CRONÔMETRO
+       // 6. FINALIZAR CRONÔMETRO
     async finish(request: Request, response: Response, next: NextFunction) {
-
-      try {
-
+        try {
             const id = Number(request.params.id);
             
-            const session = await db("study_sessions").where({id}).first();
+            const session = await db("study_sessions").where({ id }).first();
 
-            if(!session){
-                throw new AppError("sessão nao existe!", 404)
+            if (!session) {
+                throw new AppError("Sessão não existe!", 404);
             }
 
-            if(session.status !== "active" && session.status !== "paused"){
-                throw new AppError("sessão nao esta ativa ou pausada para ser finalizada!", 400)
+            if (session.status === "finished") {
+                throw new AppError("Essa sessão já foi finalizada!", 400);
             }
 
-              const elapsedSeconds = Math.floor(
-            (Date.now() - new Date(session.active_since!).getTime()) / 1000
-            );
+            // Se estiver ativa, calcula os segundos que se passaram desde o último active_since.
+            // Se já estava pausada, o tempo extra é 0!
+            let elapsedSeconds = 0;
+            if (session.status === "active" && session.active_since) {
+                elapsedSeconds = Math.floor(
+                    (Date.now() - new Date(session.active_since).getTime()) / 1000
+                );
+            }
 
-               await db("study_sessions").where({id}).update({
-                duration_seconds: session.duration_seconds + elapsedSeconds,
-               status: "finished",
-               updated_at: db.fn.now(),
-                active_since: db.fn.now(),
-            })
+            const totalDuration = session.duration_seconds + elapsedSeconds;
 
+            await db("study_sessions").where({ id }).update({
+                duration_seconds: totalDuration,
+                status: "finished",
+                active_since: null,
+                finished_at: db.fn.now(),
+                updated_at: db.fn.now(),
+            });
 
-            return response.json({ message: "Cronômetro finalizado!", duration_seconds: session.duration_seconds + elapsedSeconds });
-
-
-
-         
-            // Vamos fazer juntos aqui
-        }catch (error) {
+            return response.json({ 
+                message: "Cronômetro finalizado!", 
+                duration_seconds: totalDuration 
+            });
+        } catch (error) {
             next(error);
         }
-    
-
-
     }
 
     // 7. EXCLUIR UMA SESSÃO
@@ -237,34 +239,39 @@ export class StudySessionController {
 
 
 
+          // 8. RESUMO DO DIA
     async today(request: Request, response: Response, next: NextFunction) {
         try {
+            // Pega todas as sessões criadas hoje
+            const sessions = await db("study_sessions")
+                .whereRaw("DATE(created_at) = CURDATE()");
 
-            const id = Number(request.params.id);
+            const summary = {
+                teoria: 0,
+                questoes: 0,
+                revisao: 0,
+                total: 0
+            };
 
-            const session = await db("study_sessions")
-            .where({ id })
-            .first();
+            for (const session of sessions) {
+                const duration = session.duration_seconds;
 
-            if (!session) {
-            throw new AppError("Sessão não encontrada!", 404);
+                if (session.type === "teoria") {
+                    summary.teoria += duration;
+                } else if (session.type === "questoes") {
+                    summary.questoes += duration;
+                } else if (session.type === "revisao") {
+                    summary.revisao += duration;
+                }
+
+                summary.total += duration;
             }
 
-            await db("study_sessions").where({ id }).del();
-
-
-
-
-            return response.status(200).json({ message: "sessão deletada com sucesso" });
-
-
+            return response.json(summary);
         } catch (error) {
             next(error);
         }
     }
-
-
-
 
 
 
