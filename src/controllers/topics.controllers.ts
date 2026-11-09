@@ -38,10 +38,13 @@ class TopicsController {
         try {
             const { notebook_id } = request.query;
 
-            const query = db("topics");
+            const query = db("topics").join("notebooks", "topics.notebook_id", "notebooks.id").select(
+                "topics.*",
+                "notebooks.name as notebook_name"
+            );
 
             if (notebook_id) {
-                query.where({ notebook_id });
+                query.where({ notebook_id: Number(notebook_id) }).orderBy("created_at", "desc");
             }
 
             const topics = await query;
@@ -56,7 +59,10 @@ class TopicsController {
         try {
             const { id } = request.params;
 
-            const topic = await db("topics").where({ id }).first();
+            const topic = await db("topics").join("notebooks", "topics.notebook_id", "notebooks.id").select(
+                "topics.*",
+                "notebooks.name as notebook_name"
+            ).where({ id: Number(id) }).first();
             if (!topic) {
                 throw new AppError("Tópico não encontrado!", 404);
             }
@@ -79,12 +85,12 @@ class TopicsController {
 
             const { name, content } = bodySchema.parse(request.body);
 
-            const topic = await db("topics").where({ id }).first();
+            const topic = await db("topics").where({ id: Number(id) }).first();
             if (!topic) {
                 throw new AppError("Tópico não encontrado!", 404);
             }
 
-            await db("topics").where({ id }).update({
+            await db("topics").where({ id: Number(id) }).update({
                 name,
                 content: content !== undefined ? content : topic.content,
                 updated_at: db.fn.now(),
@@ -101,12 +107,12 @@ class TopicsController {
         try {
             const { id } = request.params;
 
-            const topic = await db("topics").where({ id }).first();
+            const topic = await db("topics").where({ id: Number(id) }).first();
             if (!topic) {
                 throw new AppError("Tópico não encontrado!", 404);
             }
 
-            await db("topics").where({ id }).delete();
+            await db("topics").where({ id: Number(id) }).delete();
 
             return response.json({ message: "Tópico deletado com sucesso!" });
         } catch (error) {
@@ -119,7 +125,7 @@ class TopicsController {
         try {
             const { id } = request.params;
 
-            const topic = await db("topics").where({ id }).first();
+            const topic = await db("topics").where({ id: Number(id) }).first();
             if (!topic) {
                 throw new AppError("Tópico não encontrado!", 404);
             }
@@ -127,7 +133,7 @@ class TopicsController {
             // Inverte o booleano: se estava false vira true; se estava true vira false!
             const newStatus = !topic.is_completed;
 
-            await db("topics").where({ id }).update({
+            await db("topics").where({ id: Number(id) }).update({
                 is_completed: newStatus,
                 updated_at: db.fn.now(),
             });

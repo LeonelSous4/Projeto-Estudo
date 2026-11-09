@@ -44,7 +44,10 @@ export class StudySessionController {
 
             const { notebook_id } = request.query;
 
-            const query = db("study_sessions");
+            const query = db("study_sessions").join("notebooks", "study_sessions.notebook_id", "notebooks.id").select(
+                "study_sessions.*",
+                "notebooks.name as notebook_name"
+            );
 
             if (notebook_id) {
                 query.where({ notebook_id: Number(notebook_id) }).orderBy("created_at", "desc");
@@ -64,7 +67,10 @@ export class StudySessionController {
             
 
             const id = Number(request.params.id);
-             const session = await db("study_sessions").where({ id }).first();
+             const session = await db("study_sessions").join("notebooks", "study_sessions.notebook_id", "notebooks.id").select(
+                "study_sessions.*",
+                "notebooks.name as notebook_name")
+                .where("study_sessions.id", id);
 
             if (!session) {
                 throw new AppError("Sessão não encontrada.", 404);
@@ -139,9 +145,7 @@ export class StudySessionController {
                 throw new AppError("sessão nao esta pausada para ser retomada!", 400)
             }
 
-            if(!session.active_since){
-                throw new AppError("sessão nao tem tempo de inicio!", 400)
-            }
+    
 
                await db("study_sessions").where({id}).update({
                status: "active",
@@ -167,7 +171,6 @@ export class StudySessionController {
     }
 
     // 6. FINALIZAR CRONÔMETRO
-       // 6. FINALIZAR CRONÔMETRO
     async finish(request: Request, response: Response, next: NextFunction) {
         try {
             const id = Number(request.params.id);
@@ -182,8 +185,7 @@ export class StudySessionController {
                 throw new AppError("Essa sessão já foi finalizada!", 400);
             }
 
-            // Se estiver ativa, calcula os segundos que se passaram desde o último active_since.
-            // Se já estava pausada, o tempo extra é 0!
+            
             let elapsedSeconds = 0;
             if (session.status === "active" && session.active_since) {
                 elapsedSeconds = Math.floor(

@@ -32,7 +32,10 @@ class NotebookController {
         try {
             const { collection_id } = request.query;
 
-            const query = db("notebooks");
+            const query = db("notebooks").join("collections", "notebooks.collection_id", "collections.id").select(
+                "notebooks.*",
+                "collections.name as collection_name"
+            );
             
 
 
@@ -51,7 +54,13 @@ class NotebookController {
         try {
             const id = Number(request.params.id);
 
-            const notebook = await db("notebooks").where({ id }).first();
+            const notebook = await db("notebooks").join("collections", "collections.id", "notebooks.collection_id")
+                .select(
+                    "notebooks.*",
+                    "collections.name as collection_name"
+                )
+                .where("notebooks.id", id)
+                .first();
 
             if (!notebook) {
                 throw new AppError("Notebook não encontrado.", 404);
