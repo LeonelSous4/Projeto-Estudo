@@ -1,0 +1,48 @@
+:root {
+  --page: #EEF0F6;
+  --surface: #FFFFFF;
+  --surface-alt: #F7F8FB;
+  --line: #E6E8F0;
+  --ink: #1F2A44;
+  --muted: #8A94AD;
+  --primary: #3B4F9A;
+  --primary-mid: #6F82C6;
+  --primary-soft: #A5B1DB;
+  --primary-tint: #EEF1FB;
+  --accent: #F27C8D;
+  --accent-tint: #FFF1F3;
+  --teoria: #3B82F6;
+  --teoria-tint: #EFF5FF;
+  --questoes: #8B5CF6;
+  --questoes-tint: #F5F0FF;
+  --revisao: #0F9F90;
+  --revisao-tint: #E6FAF7;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --shadow-soft: 0 8px 30px rgba(31,42,68,0.06);
+  --shadow-card: 0 4px 18px rgba(31,42,68,0.05);
+}
+
+
+[data-theme="dark"] {
+  --page: #0E1220;
+  --surface: #171C2E;
+  --surfaceAlt: #1E2440;
+  --line: #262E4A;
+  --ink: #EDEFF7;
+  --muted: #9AA3BC;
+  --primary: #7C8FE8;      /* índigo mais claro p/ contraste */
+  --primaryTint: #232A4D;
+  --teoria: #5EA0FF; --teoriaTint: #1B2A4A;
+  --questoes: #B18CFF; --questoesTint: #2A2347;
+  --revisao: #2DD4BF; --revisaoTint: #163A36;
+  --accent: #F27C8D;       /* mantém */
+  --shadow-soft: 0 8px 30px rgba(0,0,0,0.35);
+}
