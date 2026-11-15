@@ -29,6 +29,7 @@ export function App() {
             
             {/* Aqui vão entrar o Banner, Resumo e os Cards brancos em cima desse cinza */}
           <GoalBanner />
+          <SummaryCards />
           </div>
 
 
