@@ -10,6 +10,8 @@ import {
 
 import { Sidebar } from "./components/sidebar";
 import { Header } from "./components/header";
+import { GoalBanner } from "./components/goalBanner";
+import { SummaryCards } from "./components/SummaryCards";
 
 export function App() {
   return (
@@ -26,7 +28,11 @@ export function App() {
             <Header />
             
             {/* Aqui vão entrar o Banner, Resumo e os Cards brancos em cima desse cinza */}
+          <GoalBanner />
           </div>
+
+
+
         </main>
 
       </div>
