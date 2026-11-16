@@ -6,7 +6,8 @@ import {
   Settings, 
   HelpCircle,
   Search,
-  Target
+  Target,
+  Folder
 } from "lucide-react";
 
 export function Sidebar() {
@@ -47,6 +48,11 @@ export function Sidebar() {
           <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] bg-[var(--brand)] font-bold text-[var(--on-brand)] transition duration-150">
             <LayoutDashboard className="h-[18px] w-[18px]" />
             Dashboard
+          </button>
+
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <Folder className="h-[18px] w-[18px]" />
+            Coleções
           </button>
 
           <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
