@@ -1,39 +1,50 @@
-import { Target } from "lucide-react";
-
 export function GoalBanner() {
   return (
-    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-primary to-primaryMid p-6 sm:p-7 text-white shadow-soft">
-      {/* 1. Formas decorativas no fundo */}
-      <div className="absolute -right-6 -top-8 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
-      <div className="absolute right-20 top-10 w-24 h-24 rounded-full bg-white/10 pointer-events-none" />
-      <div className="absolute right-10 bottom-0 w-64 h-20 rounded-[24px] bg-white/[0.07] rotate-[-12deg] pointer-events-none" />
+    <section 
+      className="relative overflow-hidden rounded-[20px] p-5 text-[var(--banner-ink)] border border-[var(--line)] shadow-sm"
+      style={{ background: "var(--banner-bg)" }}
+    >
+      {/* Brilho decorativo suave no canto */}
+      <div 
+        className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full blur-2xl" 
+        style={{ background: "var(--banner-glow)" }}
+      />
 
-      {/* 2. Conteúdo textual e barra de progresso */}
-      <div className="relative z-10">
-        
-        {/* Label do topo */}
-        <div className="flex items-center gap-2 text-[12px] font-semibold tracking-widest uppercase opacity-80">
-          <Target className="w-4 h-4" />
-          <span>Sua meta de hoje</span>
+      <div className="relative flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] opacity-80">
+            Hoje • Foco total
+          </p>
+          <h2 className="mt-1 font-display text-[20px] font-extrabold">
+            Sua meta de hoje
+          </h2>
+          <p className="mt-1 text-[13px]">
+            Você estudou 2h 15m de 4h. <span className="opacity-90 font-medium">Bom começo!</span>
+          </p>
         </div>
 
-        {/* Título de horas */}
-        <h3 className="mt-3 text-[20px] sm:text-[22px] font-bold leading-tight">
-          Você estudou 2h 15m de 4h. <span className="font-normal opacity-90">Bom começo!</span>
-        </h3>
-
-        {/* Barra de Progresso + Pílula de % */}
-        <div className="mt-5 flex items-center gap-4">
-          <div className="flex-1 h-3 rounded-full bg-white/20 overflow-hidden">
-            <div className="h-full rounded-full bg-accent w-[56%]" />
-          </div>
-
-          <span className="text-[14px] font-bold bg-surface text-primary px-3 py-1 rounded-full shadow-sm">
-            56%
-          </span>
-        </div>
-
+        {/* Selo com a % */}
+        <span 
+          className="rounded-full px-3 py-1.5 text-[12px] font-extrabold shadow-sm"
+          style={{ background: "var(--banner-ink)", color: "var(--shell)" }}
+        >
+          56%
+        </span>
       </div>
-    </div>
+
+      {/* Barra de Progresso */}
+      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[var(--track)]">
+        <div 
+          className="h-full rounded-full transition-all duration-300 w-[56%]" 
+          style={{ background: "var(--brand)" }}
+        />
+      </div>
+
+      {/* Rodapé da Barra */}
+      <div className="mt-2 flex justify-between text-[11px] font-semibold opacity-80">
+        <span>2h 15m concluídos</span>
+        <span>Meta: 4h 00m</span>
+      </div>
+    </section>
   );
 }

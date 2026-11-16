@@ -4,101 +4,105 @@ import {
   History, 
   BarChart2, 
   Settings, 
-  Lightbulb, 
-  Folder 
+  HelpCircle,
+  Search,
+  Target
 } from "lucide-react";
-
-
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex w-[240px] shrink-0 bg-surface rounded-3xl p-5 shadow-soft flex-col justify-between h-fit sticky top-6">
+    <aside className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--shell)] min-h-[calc(100vh-3rem)]">
       
-      <div>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white font-display font-bold text-xl">
-            F
-          </div>
-          <span className="font-display font-bold text-xl text-ink">
-            Foco
-          </span>
-        </div>
-
-       
-        <nav className="space-y-1">
-          
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-primaryTint text-primary">
-            <LayoutDashboard size={18} />
-            Dashboard
-            </button>
-
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:bg-surfaceAlt hover:text-ink transition duration-150">
-            <Folder size={18} />
-            Coleções
-            </button>
-    
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:bg-surfaceAlt hover:text-ink transition duration-150">
-            <BookOpen size={18} />
-            Cadernos
-            </button>
-    
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:bg-surfaceAlt hover:text-ink transition duration-150">
-            <History size={18} />
-            Historico
-            </button>
-
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:bg-surfaceAlt hover:text-ink transition duration-150">
-            <BarChart2  size={18} />
-            Historico
-            </button>
-
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:bg-surfaceAlt hover:text-ink transition duration-150">
-            <Settings  size={18} />
-            Configurações
-            </button>
-            
-        </nav>
+      {/* 1. Logo */}
+      <div className="flex items-center gap-2.5 px-5 pb-6 pt-6">
+        <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--brand)] font-display text-[18px] font-extrabold text-[var(--on-brand)]">
+          F
+        </span>
+        <span className="font-display text-[22px] font-extrabold tracking-tight text-[var(--ink)]">
+          Foco
+        </span>
       </div>
 
-      <div className="mt-8 bg-surfaceAlt rounded-3xl p-4" >
-        <div className="flex items-center gap-2 text-primary font-semibold text-sm mb-2 ">
-          <Lightbulb size={16} className="bg-white rounded-sm w-" />
-          <span>Dica do dia</span>
+      <div className="px-3 flex-1 flex flex-col">
+        {/* 2. Campo de Busca */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--faint)]" />
+          <input 
+            type="text" 
+            placeholder="Buscar…" 
+            readOnly
+            className="h-10 w-full rounded-xl border-0 bg-[var(--surface-2)] pl-9 pr-10 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--faint)]"
+          />
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-[var(--surface)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--muted)]">
+            ⌘K
+          </kbd>
         </div>
-        <p className="text-[13px] leading-relaxed text-ink">
-          Revise em 24h o que aprendeu hoje. Seu cérebro fixa melhor o conteúdo.
+
+        {/* 3. Grupo Dashboards */}
+        <p className="px-2 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--faint)]">
+          Dashboards
         </p>
+
+        <nav className="space-y-1">
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] bg-[var(--brand)] font-bold text-[var(--on-brand)] transition duration-150">
+            <LayoutDashboard className="h-[18px] w-[18px]" />
+            Dashboard
+          </button>
+
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <BookOpen className="h-[18px] w-[18px]" />
+            Cadernos
+          </button>
+
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <History className="h-[18px] w-[18px]" />
+            Histórico
+          </button>
+
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <BarChart2 className="h-[18px] w-[18px]" />
+            Estatísticas
+          </button>
+        </nav>
+
+        {/* 4. Grupo Configurações */}
+        <p className="px-2 pb-2 pt-6 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--faint)]">
+          Configurações
+        </p>
+
+        <div className="space-y-1">
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <Settings className="h-[18px] w-[18px]" />
+            Configurações
+          </button>
+
+          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+            <HelpCircle className="h-[18px] w-[18px]" />
+            Ajuda
+          </button>
+        </div>
+
+        {/* 5. Card Meta do Dia no rodapé da Sidebar */}
+        <div className="mt-auto pt-6 pb-2">
+          <div className="rounded-[18px] bg-[var(--surface)] p-4 border border-[var(--line)]">
+            <div className="mb-2 flex items-center gap-2">
+              <Target className="h-4 w-4 text-[var(--brand-text)]" />
+              <p className="text-[13px] font-bold text-[var(--ink)]">Meta do dia</p>
+            </div>
+            <p className="text-[12px] leading-relaxed text-[var(--muted)]">
+              Faltam 1h 45m para sua meta de 4h
+            </p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--track)]">
+              <div className="h-full rounded-full bg-[var(--brand)] transition-all duration-200 w-[56%]" />
+            </div>
+            <p className="mt-2 text-[11px] font-bold text-[var(--brand-text)]">
+              56% concluído
+            </p>
+          </div>
+        </div>
+
       </div>
 
     </aside>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
