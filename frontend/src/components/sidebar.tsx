@@ -12,7 +12,7 @@ import {
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--shell)] min-h-[calc(100vh-3rem)]">
+    <aside className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--shell)] min-h-screen">
       
       {/* 1. Logo */}
       <div className="flex items-center gap-2.5 px-5 pb-6 pt-6">
