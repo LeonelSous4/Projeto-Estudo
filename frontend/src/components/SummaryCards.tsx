@@ -1,28 +1,73 @@
-import { Clock, BookOpen, PenTool, RefreshCcw, ArrowUpRight } from "lucide-react";
+import {
+  ArrowDownRight,
+  BookOpen,
+  Clock,
+  PenTool,
+  RefreshCcw,
+} from "lucide-react";
+
+
+import { useEffect, useState } from "react";
+import { getSummaryCards, type SummaryCardsData } from "../services/SumaryCards";
+
+
+function formatTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  return `${hours}h ${minutes}m`;
+}
+
+
+
 
 export function SummaryCards() {
+
+
+
+  const [summary, setSummary] = useState<SummaryCardsData>({
+  teoria: 0,
+  questoes: 0,
+  revisao: 0,
+  total: 0,
+});
+
+
+
+useEffect(() => {
+  getSummaryCards().then((data) => {
+    setSummary(data);
+  });
+}, []);
+
+
+
+
+
   return (
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      
-      {/* 1. Total Hoje */}
+      {/* 1. Total hoje */}
       <article className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
         <div className="flex items-center justify-between">
           <span className="grid h-9 w-9 place-items-center rounded-[12px] bg-[var(--brand-tint)]">
-            <Clock className="h-4 w-4 text-[var(--brand-text)]" />
+            <Clock aria-hidden="true" className="h-4 w-4 text-[var(--brand-text)]" />
           </span>
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Total hoje</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          2h 15m
+          {formatTime(summary.total)}
         </p>
         <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold text-[var(--success)] bg-[var(--surface-2)]">
-            <ArrowUpRight className="h-3 w-3" />
-            +18% vs ontem
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
+            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
+            ▼ 25% vs ontem
           </span>
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div className="h-full rounded-full bg-[var(--brand)] w-[56%]" />
+          <div
+            className="h-full rounded-full bg-[var(--brand)]"
+            style={{ width: "56%" }}
+          />
         </div>
       </article>
 
@@ -30,22 +75,25 @@ export function SummaryCards() {
       <article className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
         <div className="flex items-center justify-between">
           <span className="grid h-9 w-9 place-items-center rounded-[12px] bg-[var(--teoria-tint)]">
-            <BookOpen className="h-4 w-4 text-[var(--teoria)]" />
+            <BookOpen aria-hidden="true" className="h-4 w-4 text-[var(--teoria)]" />
           </span>
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--teoria)]" />
+          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-[var(--teoria)]" />
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Teoria</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          1h 00m
+          {formatTime(summary.teoria)}
         </p>
         <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold text-[var(--success)] bg-[var(--surface-2)]">
-            <ArrowUpRight className="h-3 w-3" />
-            +12% vs ontem
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
+            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
+            ▼ 48% vs ontem
           </span>
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div className="h-full rounded-full bg-[var(--teoria)] w-[44%]" />
+          <div
+            className="h-full rounded-full bg-[var(--teoria)]"
+            style={{ width: "44%" }}
+          />
         </div>
       </article>
 
@@ -53,22 +101,25 @@ export function SummaryCards() {
       <article className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
         <div className="flex items-center justify-between">
           <span className="grid h-9 w-9 place-items-center rounded-[12px] bg-[var(--questoes-tint)]">
-            <PenTool className="h-4 w-4 text-[var(--questoes)]" />
+            <PenTool aria-hidden="true" className="h-4 w-4 text-[var(--questoes)]" />
           </span>
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--questoes)]" />
+          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-[var(--questoes)]" />
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Questões</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          45m
+          {formatTime(summary.questoes)}
         </p>
         <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold text-[var(--success)] bg-[var(--surface-2)]">
-            <ArrowUpRight className="h-3 w-3" />
-            +25% vs ontem
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
+            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
+            ▼ 31% vs ontem
           </span>
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div className="h-full rounded-full bg-[var(--questoes)] w-[33%]" />
+          <div
+            className="h-full rounded-full bg-[var(--questoes)]"
+            style={{ width: "33%" }}
+          />
         </div>
       </article>
 
@@ -76,24 +127,26 @@ export function SummaryCards() {
       <article className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
         <div className="flex items-center justify-between">
           <span className="grid h-9 w-9 place-items-center rounded-[12px] bg-[var(--revisao-tint)]">
-            <RefreshCcw className="h-4 w-4 text-[var(--revisao)]" />
+            <RefreshCcw aria-hidden="true" className="h-4 w-4 text-[var(--revisao)]" />
           </span>
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--revisao)]" />
+          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-[var(--revisao)]" />
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Revisão</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          30m
+          {formatTime(summary.revisao)}
         </p>
         <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold text-[var(--muted)] bg-[var(--surface-2)]">
-            0% vs ontem
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)]">
+            novo
           </span>
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div className="h-full rounded-full bg-[var(--revisao)] w-[22%]" />
+          <div
+            className="h-full rounded-full bg-[var(--revisao)]"
+            style={{ width: "22%" }}
+          />
         </div>
       </article>
-
     </section>
   );
 }
