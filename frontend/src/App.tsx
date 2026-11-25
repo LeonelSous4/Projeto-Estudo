@@ -10,16 +10,6 @@ import { Collections } from "./components/Collections";
 import { TodaySessions } from "./components/TodaySessions";
 import { SidebarRight } from "./components/SidebarRight";
 
-
-
-
-
-
-
-
-
-
-
 export function App() {
   return (
     <div className="min-h-screen w-full bg-[var(--page)] text-[var(--ink)] antialiased transition-colors duration-200">

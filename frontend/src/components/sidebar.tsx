@@ -17,10 +17,10 @@ export function Sidebar() {
       {/* 1. Logo */}
       <div className="flex items-center gap-2.5 px-5 pb-6 pt-6">
         <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--brand)] font-display text-[18px] font-extrabold text-[var(--on-brand)]">
-          F
+          T
         </span>
         <span className="font-display text-[22px] font-extrabold tracking-tight text-[var(--ink)]">
-          Foco
+          Trilhy
         </span>
       </div>
 
