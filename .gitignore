@@ -1,3 +1,7 @@
 node_modules
 .env
 dist
+frontend/reference/Tokens.css
+.gitignore
+frontend/reference/
+/Foco+Pagina+Do+Caderno/
