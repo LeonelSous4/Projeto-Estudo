@@ -1,37 +1,64 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { getStudySessions, type StudySession } from "../services/studySessions";
+import { ehMesmoDia, formatarMinutos } from "../utils/formatTime";
 
 type Periodo = "hoje" | "7 dias";
 
-const dadosHoje = [
-  { tipo: "Teoria", minutos: 60 },
-  { tipo: "Questões", minutos: 45 },
-  { tipo: "Revisão", minutos: 30 },
-];
-
-const dadosSemana = [
-  { tipo: "Teoria", minutos: 510 },
-  { tipo: "Questões", minutos: 440 },
-  { tipo: "Revisão", minutos: 300 },
-];
-
-const cores = ["var(--teoria)", "var(--questoes)", "var(--revisao)"];
-
-function formatarTempo(minutos: number) {
-  const horas = Math.floor(minutos / 60);
-  const restoMinutos = minutos % 60;
-
-  if (horas === 0) return `${restoMinutos}m`;
-  return `${horas}h ${String(restoMinutos).padStart(2, "0")}m`;
+interface TimeDistribuitionProps {
+  atualizacao?: number;
 }
 
-export function TimeDistribuition() {
+const CORES = ["var(--teoria)", "var(--questoes)", "var(--revisao)"];
+
+export function TimeDistribuition({ atualizacao = 0 }: TimeDistribuitionProps) {
   const [periodo, setPeriodo] = useState<Periodo>("hoje");
-  const dados = periodo === "hoje" ? dadosHoje : dadosSemana;
+  const [sessoes, setSessoes] = useState<StudySession[]>([]);
+
+  useEffect(() => {
+    getStudySessions()
+      .then((dados) => setSessoes(dados))
+      .catch(() => {
+        // Mantém os dados atuais em caso de erro
+      });
+  }, [atualizacao]);
+
+  // Filtra as sessões de acordo com o botão selecionado ("Hoje" ou "7 dias")
+  const hoje = new Date();
+  const seteDiasAtras = new Date();
+  seteDiasAtras.setDate(hoje.getDate() - 6);
+  seteDiasAtras.setHours(0, 0, 0, 0);
+
+  const sessoesFiltradas = sessoes.filter((s) => {
+    const dataSessao = new Date(s.created_at);
+    if (periodo === "hoje") {
+      return ehMesmoDia(dataSessao, hoje);
+    }
+    return dataSessao >= seteDiasAtras;
+  });
+
+  // Soma os segundos de cada tipo e converte para minutos
+  let segTeoria = 0;
+  let segQuestoes = 0;
+  let segRevisao = 0;
+
+  for (const s of sessoesFiltradas) {
+    if (s.type === "teoria") segTeoria += s.duration_seconds;
+    else if (s.type === "questoes") segQuestoes += s.duration_seconds;
+    else if (s.type === "revisao") segRevisao += s.duration_seconds;
+  }
+
+  const dados = [
+    { tipo: "Teoria", minutos: Math.round(segTeoria / 60) },
+    { tipo: "Questões", minutos: Math.round(segQuestoes / 60) },
+    { tipo: "Revisão", minutos: Math.round(segRevisao / 60) },
+  ];
+
   const totalMinutos = dados.reduce((total, item) => total + item.minutos, 0);
 
-
+  // Quando tudo está zerado, usamos um dado neutro apenas para desenhar o anel vazio
+  const dadosGrafico =
+    totalMinutos > 0 ? dados : [{ tipo: "Sem dados", minutos: 1 }];
 
   return (
     <section className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4">
@@ -67,27 +94,25 @@ export function TimeDistribuition() {
         </div>
       </div>
 
-
-
-
-
-
       <div className="relative mx-auto h-[180px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={dados}
+              data={dadosGrafico}
               dataKey="minutos"
               nameKey="tipo"
               cx="50%"
               cy="50%"
               innerRadius={52}
               outerRadius={76}
-              paddingAngle={3}
+              paddingAngle={totalMinutos > 0 ? 3 : 0}
               stroke="none"
             >
-              {dados.map((item, index) => (
-                <Cell key={item.tipo} fill={cores[index]} />
+              {dadosGrafico.map((item, index) => (
+                <Cell
+                  key={item.tipo}
+                  fill={totalMinutos > 0 ? CORES[index] : "var(--track)"}
+                />
               ))}
             </Pie>
           </PieChart>
@@ -95,7 +120,7 @@ export function TimeDistribuition() {
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-display text-[20px] font-extrabold text-[var(--ink)]">
-            {formatarTempo(totalMinutos)}
+            {formatarMinutos(totalMinutos)}
           </span>
           <span className="text-[9px] font-bold uppercase text-[var(--muted)]">
             estudados
@@ -103,14 +128,10 @@ export function TimeDistribuition() {
         </div>
       </div>
 
-
-
-
-
-
       <ul className="mt-2 space-y-2">
         {dados.map((item, index) => {
-          const porcentagem = Math.round((item.minutos / totalMinutos) * 100);
+          const porcentagem =
+            totalMinutos > 0 ? Math.round((item.minutos / totalMinutos) * 100) : 0;
 
           return (
             <li
@@ -120,12 +141,12 @@ export function TimeDistribuition() {
               <span className="flex items-center gap-2 text-[var(--muted)]">
                 <i
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: cores[index] }}
+                  style={{ backgroundColor: CORES[index] }}
                 />
                 {item.tipo}
               </span>
               <span className="font-semibold text-[var(--ink)]">
-                {formatarTempo(item.minutos)}
+                {formatarMinutos(item.minutos)}
                 <span className="ml-1.5 text-[var(--muted)]">
                   {porcentagem}%
                 </span>

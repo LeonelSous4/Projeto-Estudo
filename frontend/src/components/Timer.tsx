@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { initTimer, pauseTimer, resumeTimer, finishTimer, type StudyType } from "../services/studySessions";
+import { getNotebooks, type Notebook } from "../services/notebooks";
 import { Play, Pause, ChevronDown, Timer as TimerIcon } from "lucide-react";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -6,6 +8,8 @@ type Tipo = "Teoria" | "Questões" | "Revisão";
 type Status = "parado" | "rodando" | "pausado";
 
 interface TimerState {
+  /** id da sessão criada no backend (null enquanto parado) */
+  sessaoId: number | null;
   status: Status;
   tipo: Tipo;
   materiaId: string;
@@ -16,6 +20,12 @@ interface TimerState {
   /** Modo Pomodoro ativo? */
   pomodoro: boolean;
 }
+
+const TIPO_API: Record<"Teoria" | "Questões" | "Revisão", StudyType> = {
+  Teoria: "teoria",
+  Questões: "questoes",
+  Revisão: "revisao",
+};
 
 // ─── Constantes ─────────────────────────────────────────────────────────────
 const STORAGE_KEY = "foco-timer-v2";
@@ -78,33 +88,49 @@ function limparStorage() {
 // ─── Estado inicial ──────────────────────────────────────────────────────────
 function estadoInicial(): TimerState {
   return {
+    sessaoId: null,
     status: "parado",
     tipo: "Teoria",
-    materiaId: "5",
+    materiaId: "",
     acumuladoMs: 0,
     iniciadoEm: null,
     pomodoro: false,
   };
 }
 
+interface TimerProps {
+  /** Callback chamado quando uma sessão é finalizada no backend */
+  onSessaoFinalizada?: () => void;
+}
+
 // ─── Componente ─────────────────────────────────────────────────────────────
-export function Timer() {
-  // --- cadernos / coleções (mock enquanto API não está conectada) ---
-  // Quando conectar ao backend, substitua por um useEffect que busca /notebooks
-  const colecoes = ["Concurso", "Faculdade", "Programação"];
-  const cadernos = [
-    { id: "1", nome: "Português", colecao: "Concurso" },
-    { id: "2", nome: "Matemática", colecao: "Concurso" },
-    { id: "3", nome: "Cálculo", colecao: "Faculdade" },
-    { id: "4", nome: "React", colecao: "Programação" },
-    { id: "5", nome: "JavaScript", colecao: "Programação" },
-  ];
+export function Timer({ onSessaoFinalizada }: TimerProps) {
+  // --- cadernos / coleções reais da API ---
+  const [cadernos, setCadernos] = useState<Notebook[]>([]);
+  const colecoes = Array.from(new Set(cadernos.map((c) => c.collection_name)));
 
   // --- state do timer ---
   const [ts, setTs] = useState<TimerState>(() => lerStorage() ?? estadoInicial());
   // displayMs = ms totais que o relógio deve mostrar (recalculado a cada tick)
   const [displayMs, setDisplayMs] = useState(0);
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    getNotebooks()
+      .then((dados) => {
+        setCadernos(dados);
+        setTs((prev) => {
+          if (prev.status !== "parado") return prev;
+          const existe = dados.some((c) => String(c.id) === prev.materiaId);
+          if (existe) return prev;
+          return { ...prev, materiaId: dados[0] ? String(dados[0].id) : "" };
+        });
+      })
+      .catch(() => {
+        setErro("Não foi possível carregar os cadernos.");
+      });
+  }, []);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -125,15 +151,17 @@ export function Timer() {
       const atual = calcMs(prev);
       setDisplayMs(atual);
 
-      // Auto-finalizar Pomodoro
-      if (prev.pomodoro && prev.status === "rodando" && atual >= POMODORO_MS) {
-        // Finaliza automaticamente
-        limparStorage();
-        return estadoInicial();
-      }
       return prev;
     });
   }, [calcMs]);
+
+  // ── Auto-finalizar Pomodoro (salva a sessão no backend) ───────────────────
+  useEffect(() => {
+    if (ts.pomodoro && ts.status === "rodando" && displayMs >= POMODORO_MS) {
+      void finalizar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayMs]);
 
   // ── Gerencia intervalo ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -174,48 +202,79 @@ export function Timer() {
   }, [ts]);
 
   // ─── Ações ─────────────────────────────────────────────────────────────────
-  function iniciar() {
-    const novo: TimerState = {
-      ...ts,
-      status: "rodando",
-      acumuladoMs: 0,
-      iniciadoEm: Date.now(),
-    };
-    setTs(novo);
-    salvarStorage(novo);
+  async function iniciar() {
+    if (!ts.materiaId) {
+      setErro("Selecione um caderno para iniciar.");
+      return;
+    }
+    setErro("");
+    setSalvando(true);
+    try {
+      const id = await initTimer(Number(ts.materiaId), TIPO_API[ts.tipo]);
+      const novo: TimerState = {
+        ...ts,
+        sessaoId: id,
+        status: "rodando",
+        acumuladoMs: 0,
+        iniciadoEm: Date.now(),
+      };
+      setTs(novo);
+      salvarStorage(novo);
+    } catch {
+      setErro("Não foi possível iniciar a sessão.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
-  function pausar() {
-    const acumulado = calcMs(ts);
-    const novo: TimerState = {
-      ...ts,
-      status: "pausado",
-      acumuladoMs: acumulado,
-      iniciadoEm: null,
-    };
-    setTs(novo);
-    salvarStorage(novo);
+  async function pausar() {
+    if (ts.sessaoId == null) return;
+    try {
+      const segundos = await pauseTimer(ts.sessaoId);
+      const novo: TimerState = {
+        ...ts,
+        status: "pausado",
+        acumuladoMs: segundos * 1000, // tempo oficial do backend, em ms
+        iniciadoEm: null,
+      };
+      setTs(novo);
+      salvarStorage(novo);
+    } catch {
+      setErro("Não foi possível pausar.");
+    }
   }
 
-  function retomar() {
-    const novo: TimerState = {
-      ...ts,
-      status: "rodando",
-      iniciadoEm: Date.now(),
-    };
-    setTs(novo);
-    salvarStorage(novo);
+  async function retomar() {
+    if (ts.sessaoId == null) return;
+    try {
+      await resumeTimer(ts.sessaoId);
+      const novo: TimerState = {
+        ...ts,
+        status: "rodando",
+        iniciadoEm: Date.now(),
+      };
+      setTs(novo);
+      salvarStorage(novo);
+    } catch {
+      setErro("Não foi possível retomar.");
+    }
   }
 
   async function finalizar() {
-    // Daqui você vai chamar a API para salvar a sessão.
-    // Por ora, apenas limpa o estado.
+    if (ts.sessaoId == null || salvando) return;
     setSalvando(true);
-    await new Promise((r) => setTimeout(r, 400)); // simula latência
-    setSalvando(false);
-    limparStorage();
-    setTs(estadoInicial());
-    setDisplayMs(0);
+    try {
+      await finishTimer(ts.sessaoId);
+      limparStorage();
+      setTs(estadoInicial());
+      setDisplayMs(0);
+      setErro("");
+      onSessaoFinalizada?.();
+    } catch {
+      setErro("Não foi possível finalizar. Tente de novo.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
   function trocarTipo(novoTipo: Tipo) {
@@ -244,7 +303,7 @@ export function Timer() {
   };
 
   const nomeCaderno =
-    cadernos.find((c) => c.id === ts.materiaId)?.nome ?? "—";
+    cadernos.find((c) => String(c.id) === ts.materiaId)?.name ?? "—";
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
@@ -283,10 +342,10 @@ export function Timer() {
           {colecoes.map((col) => (
             <optgroup key={col} label={col}>
               {cadernos
-                .filter((c) => c.colecao === col)
+                .filter((c) => c.collection_name === col)
                 .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
+                  <option key={c.id} value={String(c.id)}>
+                    {c.name}
                   </option>
                 ))}
             </optgroup>
@@ -346,11 +405,12 @@ export function Timer() {
         {/* Estado: parado → botão Iniciar em full width */}
         {ts.status === "parado" && (
           <button
-            onClick={iniciar}
+            onClick={() => void iniciar()}
+            disabled={salvando}
             className="col-span-2 flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--brand)] text-[12px] font-bold text-[var(--on-brand)] transition hover:opacity-90 active:scale-[0.98]"
           >
             <Play className="h-4 w-4 fill-current" />
-            Iniciar
+            {salvando ? "Iniciando…" : "Iniciar"}
           </button>
         )}
 
@@ -358,7 +418,7 @@ export function Timer() {
         {ts.status === "rodando" && (
           <>
             <button
-              onClick={pausar}
+              onClick={() => void pausar()}
               className="flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--surface-2)] text-[12px] font-bold transition hover:opacity-80"
             >
               <Pause className="h-4 w-4" />
@@ -378,7 +438,7 @@ export function Timer() {
         {ts.status === "pausado" && (
           <>
             <button
-              onClick={retomar}
+              onClick={() => void retomar()}
               className="flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--brand)] text-[12px] font-bold text-[var(--on-brand)] transition hover:opacity-90"
             >
               <Play className="h-4 w-4 fill-current" />
@@ -424,6 +484,12 @@ export function Timer() {
           O Pomodoro conta 25 minutos e salva a sessão ao zerar.
         </p>
       </div>
+
+      {erro && (
+        <p role="alert" className="mt-2 text-center text-[11px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
 
       {/* ── Dica: tempo acumulado ao pausar ── */}
       {ts.status === "pausado" && (
