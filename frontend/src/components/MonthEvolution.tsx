@@ -1,4 +1,4 @@
-
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -9,19 +9,53 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getStudySessions, type StudySession } from "../services/studySessions";
+import { ehMesmoDia, formatarDuracao } from "../utils/formatTime";
 
-const dadosEvolucao = [
-  { dia: "01/11", horas: 1.5 },
-  { dia: "02/11", horas: 5 },
-  { dia: "03/11", horas: 1 },
-  { dia: "04/11", horas: 6 },
-  { dia: "05/11", horas: 4 },
-  { dia: "06/11", horas: 1 },
+interface MonthEvolutionProps {
+  atualizacao?: number;
+}
 
+function formatarDiaMes(data: Date): string {
+  const dia = String(data.getDate()).padStart(2, "0");
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  return `${dia}/${mes}`;
+}
 
-];
+export function MonthEvolution({ atualizacao = 0 }: MonthEvolutionProps) {
+  const [sessoes, setSessoes] = useState<StudySession[]>([]);
 
-export function MonthEvolution() {
+  useEffect(() => {
+    getStudySessions()
+      .then((dados) => setSessoes(dados))
+      .catch(() => {
+        // Mantém os dados atuais em caso de erro
+      });
+  }, [atualizacao]);
+
+  // Monta os últimos 30 dias em ordem cronológica
+  const hoje = new Date();
+  let totalPeriodoSeg = 0;
+
+  const dadosEvolucao = Array.from({ length: 30 }, (_, index) => {
+    const data = new Date(hoje);
+    data.setDate(hoje.getDate() - (29 - index));
+
+    let segDia = 0;
+    for (const s of sessoes) {
+      if (ehMesmoDia(new Date(s.created_at), data)) {
+        segDia += s.duration_seconds;
+      }
+    }
+
+    totalPeriodoSeg += segDia;
+
+    return {
+      dia: formatarDiaMes(data),
+      horas: Number((segDia / 3600).toFixed(2)),
+    };
+  });
+
   return (
     <section className="rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-7">
       <div className="flex items-start justify-between gap-4">
@@ -38,10 +72,7 @@ export function MonthEvolution() {
           </p>
           <div className="flex items-center justify-end gap-2">
             <span className="font-display text-[18px] font-extrabold text-[var(--ink)]">
-              69h 06m
-            </span>
-            <span className="text-[10px] font-bold text-[var(--success)]">
-              ▲ 1%
+              {formatarDuracao(totalPeriodoSeg)}
             </span>
           </div>
         </div>
@@ -64,11 +95,11 @@ export function MonthEvolution() {
               fontSize={10}
               tickLine={false}
               axisLine={false}
+              interval={4}
             />
             <YAxis
               unit="h"
-              ticks={[1, 2, 3]}
-              domain={[0, 4]}
+              domain={[0, "auto"]}
               stroke="var(--faint)"
               fontSize={10}
               tickLine={false}
@@ -100,13 +131,12 @@ export function MonthEvolution() {
               dataKey="horas"
               stroke="var(--brand)"
               strokeWidth={3}
-              dot={{ r: 3, fill: "var(--brand)", strokeWidth: 0 }}
+              dot={false}
               activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-
     </section>
   );
 }
