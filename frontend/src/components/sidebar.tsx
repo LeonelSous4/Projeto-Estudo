@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { getSummaryCards } from "../services/SumaryCards";
+import { formatarDuracao } from "../utils/formatTime";
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -10,7 +13,19 @@ import {
   Folder
 } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  paginaAtiva: "dashboard" | "colecoes" | "cadernos";
+  onMudarPagina: (pagina: "dashboard" | "colecoes" | "cadernos") => void;
+  metaHoras: number;
+  atualizacao: number;
+}
+
+export function Sidebar({ paginaAtiva, onMudarPagina, metaHoras, atualizacao }: SidebarProps) {
+  const [segundosEstudados, setSegundosEstudados] = useState(0);
+  useEffect(() => { getSummaryCards().then((resumo) => setSegundosEstudados(resumo.total)).catch(() => {}); }, [atualizacao]);
+  const metaSegundos = metaHoras * 3600;
+  const progressoMeta = Math.min(100, Math.round((segundosEstudados / metaSegundos) * 100));
+  const faltam = Math.max(0, metaSegundos - segundosEstudados);
   return (
     <aside className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--shell)] min-h-screen">
       
@@ -45,17 +60,33 @@ export function Sidebar() {
         </p>
 
         <nav className="space-y-1">
-          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] bg-[var(--brand)] font-bold text-[var(--on-brand)] transition duration-150">
+          <button
+            type="button"
+            onClick={() => onMudarPagina("dashboard")}
+            className={`flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] transition duration-150 cursor-pointer ${
+              paginaAtiva === "dashboard"
+                ? "bg-[var(--brand)] font-bold text-[var(--on-brand)]"
+                : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] font-medium"
+            }`}
+          >
             <LayoutDashboard className="h-[18px] w-[18px]" />
             Dashboard
           </button>
 
-          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+          <button
+            type="button"
+            onClick={() => onMudarPagina("colecoes")}
+            className={`flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] transition duration-150 cursor-pointer ${
+              paginaAtiva === "colecoes"
+                ? "bg-[var(--brand)] font-bold text-[var(--on-brand)]"
+                : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] font-medium"
+            }`}
+          >
             <Folder className="h-[18px] w-[18px]" />
             Coleções
           </button>
 
-          <button className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition duration-150 font-medium">
+          <button type="button" onClick={() => onMudarPagina("cadernos")} className={`flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[13.5px] transition duration-150 cursor-pointer ${paginaAtiva === "cadernos" ? "bg-[var(--brand)] font-bold text-[var(--on-brand)]" : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] font-medium"}`}>
             <BookOpen className="h-[18px] w-[18px]" />
             Cadernos
           </button>
@@ -96,13 +127,13 @@ export function Sidebar() {
               <p className="text-[13px] font-bold text-[var(--ink)]">Meta do dia</p>
             </div>
             <p className="text-[12px] leading-relaxed text-[var(--muted)]">
-              Faltam 1h 45m para sua meta de 4h
+              {faltam > 0 ? `Faltam ${formatarDuracao(faltam)} para sua meta de ${metaHoras}h` : "Meta diária concluída!"}
             </p>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--track)]">
-              <div className="h-full rounded-full bg-[var(--brand)] transition-all duration-200 w-[56%]" />
+              <div className="h-full rounded-full bg-[var(--brand)] transition-all duration-200" style={{ width: `${progressoMeta}%` }} />
             </div>
             <p className="mt-2 text-[11px] font-bold text-[var(--brand-text)]">
-              56% concluído
+              {progressoMeta}% concluído
             </p>
           </div>
         </div>

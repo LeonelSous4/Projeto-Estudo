@@ -1,48 +1,36 @@
-import {
-  ArrowDownRight,
-  BookOpen,
-  Clock,
-  PenTool,
-  RefreshCcw,
-} from "lucide-react";
-
-
 import { useEffect, useState } from "react";
+import { BookOpen, Clock, PenTool, RefreshCcw } from "lucide-react";
 import { getSummaryCards, type SummaryCardsData } from "../services/SumaryCards";
+import { formatarDuracao } from "../utils/formatTime";
 
-
-function formatTime(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  return `${hours}h ${minutes}m`;
+interface SummaryCardsProps {
+  /** Número incrementado quando o Timer finaliza uma sessão para recarregar os dados */
+  atualizacao?: number;
 }
 
+interface SummaryCardsWithGoalProps extends SummaryCardsProps { metaHoras: number }
 
-
-
-export function SummaryCards() {
-
-
-
+export function SummaryCards({ atualizacao = 0, metaHoras }: SummaryCardsWithGoalProps) {
   const [summary, setSummary] = useState<SummaryCardsData>({
-  teoria: 0,
-  questoes: 0,
-  revisao: 0,
-  total: 0,
-});
-
-
-
-useEffect(() => {
-  getSummaryCards().then((data) => {
-    setSummary(data);
+    teoria: 0,
+    questoes: 0,
+    revisao: 0,
+    total: 0,
   });
-}, []);
 
+  // Busca o resumo de hoje sempre que o componente abre ou uma sessão termina
+  useEffect(() => {
+    getSummaryCards()
+      .then((data) => setSummary(data))
+      .catch(() => {
+        // Mantém os valores atuais em caso de erro de rede
+      });
+  }, [atualizacao]);
 
-
-
+  const pctMetaTotal = Math.min(
+    100,
+    Math.round((summary.total / (metaHoras * 3600)) * 100)
+  );
 
   return (
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -55,18 +43,17 @@ useEffect(() => {
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Total hoje</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          {formatTime(summary.total)}
+          {formatarDuracao(summary.total)}
         </p>
         <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
-            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
-            ▼ 25% vs ontem
+          <span className="inline-flex items-center rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)]">
+            {pctMetaTotal}% da meta ({metaHoras}h)
           </span>
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
           <div
-            className="h-full rounded-full bg-[var(--brand)]"
-            style={{ width: "56%" }}
+            className="h-full rounded-full bg-[var(--brand)] transition-all duration-300"
+            style={{ width: `${pctMetaTotal}%` }}
           />
         </div>
       </article>
@@ -81,20 +68,8 @@ useEffect(() => {
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Teoria</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          {formatTime(summary.teoria)}
+          {formatarDuracao(summary.teoria)}
         </p>
-        <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
-            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
-            ▼ 48% vs ontem
-          </span>
-        </p>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div
-            className="h-full rounded-full bg-[var(--teoria)]"
-            style={{ width: "44%" }}
-          />
-        </div>
       </article>
 
       {/* 3. Questões */}
@@ -107,20 +82,8 @@ useEffect(() => {
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Questões</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          {formatTime(summary.questoes)}
+          {formatarDuracao(summary.questoes)}
         </p>
-        <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--danger)]">
-            <ArrowDownRight aria-hidden="true" className="h-3 w-3" />
-            ▼ 31% vs ontem
-          </span>
-        </p>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div
-            className="h-full rounded-full bg-[var(--questoes)]"
-            style={{ width: "33%" }}
-          />
-        </div>
       </article>
 
       {/* 4. Revisão */}
@@ -133,19 +96,8 @@ useEffect(() => {
         </div>
         <p className="mt-3 text-[12px] text-[var(--muted)]">Revisão</p>
         <p className="mt-1 font-display text-[24px] font-extrabold leading-none text-[var(--ink)] tabular-nums">
-          {formatTime(summary.revisao)}
+          {formatarDuracao(summary.revisao)}
         </p>
-        <p className="mt-2">
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)]">
-            novo
-          </span>
-        </p>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--track)]">
-          <div
-            className="h-full rounded-full bg-[var(--revisao)]"
-            style={{ width: "22%" }}
-          />
-        </div>
       </article>
     </section>
   );
